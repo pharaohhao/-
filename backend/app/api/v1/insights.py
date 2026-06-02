@@ -4,6 +4,7 @@ from app.api.deps import get_db, get_current_user
 from app.models import User
 from app.schemas.insight import PersonaInsightRead
 from app.services.insight_service import InsightService
+from app.services.insight_engine_service import InsightEngineService
 
 router = APIRouter(prefix="/personas/{persona_id}/insights", tags=["insights"])
 
@@ -40,3 +41,15 @@ async def generate_insights(persona_id: str, db: Session = Depends(get_db), curr
     db.commit()
     db.refresh(insight)
     return insight
+
+
+@router.post("/analyze")
+def analyze_persona(
+    persona_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    result = InsightEngineService(db).analyze(persona_id)
+    if "error" in result:
+        raise HTTPException(status_code=404, detail=result["error"])
+    return result
