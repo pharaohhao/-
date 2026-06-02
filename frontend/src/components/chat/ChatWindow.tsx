@@ -47,11 +47,11 @@ export default function ChatWindow({ onMessageSent }: { onMessageSent?: () => vo
   const hasMessages = messages.length > 0;
 
   return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-900 shadow-lg flex flex-col" style={{ height: '700px' }}>
+    <div className="rounded-2xl border border-stone-200 bg-white shadow-sm flex flex-col" style={{ height: '700px' }}>
       {/* Header */}
-      <div className="px-5 py-3 border-b border-slate-800 flex items-center gap-2 shrink-0">
-        <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50" />
-        <span className="text-sm text-slate-300">正在和 <span className="font-medium text-slate-200">{currentPersona.name}</span> 对话</span>
+      <div className="px-5 py-3 border-b border-stone-100 flex items-center gap-2 shrink-0">
+        <div className="w-2 h-2 rounded-full bg-emerald-400" />
+        <span className="text-sm text-stone-500">正在和 <span className="font-medium text-stone-700">{currentPersona.name}</span> 对话</span>
       </div>
 
       {/* Messages */}
@@ -59,12 +59,12 @@ export default function ChatWindow({ onMessageSent }: { onMessageSent?: () => vo
         {!hasMessages && (
           <div className="flex flex-col items-center justify-center h-full text-center">
             <div className="text-5xl mb-4">{currentPersona.avatar || '👤'}</div>
-            <h3 className="text-lg font-medium text-slate-300 mb-2">开始认识 {currentPersona.name}</h3>
-            <p className="text-slate-500 text-sm mb-6">点击下方话题或直接输入，系统会自动提取记忆</p>
+            <h3 className="text-lg font-medium text-stone-600 mb-2">开始认识 {currentPersona.name}</h3>
+            <p className="text-stone-400 text-sm mb-6">点击下方话题或直接输入，系统会自动提取记忆</p>
             <div className="flex flex-wrap gap-2 justify-center max-w-md">
               {chips.map(c => (
                 <button key={c} onClick={() => { setInput(c); inputRef.current?.focus(); }}
-                  className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 rounded-xl text-xs transition-colors border border-slate-700 hover:border-slate-600">
+                  className="px-3 py-2 bg-stone-50 hover:bg-amber-50 text-stone-500 hover:text-amber-700 rounded-xl text-xs transition-colors border border-stone-200 hover:border-amber-200">
                   {c}
                 </button>
               ))}
@@ -76,31 +76,31 @@ export default function ChatWindow({ onMessageSent }: { onMessageSent?: () => vo
           <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div className={`max-w-[75%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
               m.role === 'user'
-                ? 'bg-blue-600/20 text-slate-200 border border-blue-500/20'
-                : 'bg-slate-800 text-slate-300 border border-slate-700'
+                ? 'bg-amber-50 text-stone-700 border border-amber-100'
+                : 'bg-stone-50 text-stone-600 border border-stone-100'
             }`}>
               {m.content || (streaming && i === messages.length - 1
-                ? <span className="flex gap-1"><span className="w-1.5 h-1.5 bg-slate-500 rounded-full animate-bounce" /><span className="w-1.5 h-1.5 bg-slate-500 rounded-full animate-bounce [animation-delay:150ms]" /><span className="w-1.5 h-1.5 bg-slate-500 rounded-full animate-bounce [animation-delay:300ms]" /></span>
+                ? <span className="flex gap-1"><span className="w-1.5 h-1.5 bg-stone-400 rounded-full animate-bounce" /><span className="w-1.5 h-1.5 bg-stone-400 rounded-full animate-bounce [animation-delay:150ms]" /><span className="w-1.5 h-1.5 bg-stone-400 rounded-full animate-bounce [animation-delay:300ms]" /></span>
                 : null)}
             </div>
           </div>
         ))}
 
-        {error && <div className="text-xs text-rose-400 text-center py-2">{error}</div>}
+        {error && <div className="text-xs text-rose-500 text-center py-2">{error}</div>}
         <div ref={bottomRef} />
       </div>
 
-      {/* Input — sticky */}
-      <div className="px-4 py-3 border-t border-slate-800 shrink-0">
+      {/* Input */}
+      <div className="px-4 py-3 border-t border-stone-100 shrink-0">
         <div className="flex items-center gap-2">
           <input ref={inputRef} type="text" value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
             placeholder={`和 ${currentPersona.name} 说点什么...`}
             disabled={streaming}
-            className="flex-1 bg-slate-800 text-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none placeholder-slate-500 border border-slate-700 focus:border-slate-600 disabled:opacity-50 transition-colors" />
+            className="flex-1 bg-stone-50 text-stone-700 rounded-xl px-4 py-2.5 text-sm outline-none placeholder:text-stone-400 border border-stone-200 focus:border-amber-300 disabled:opacity-50 transition-colors" />
           <button onClick={send} disabled={!input.trim() || streaming}
-            className="px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-500 transition-colors text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed">
+            className="px-4 py-2.5 bg-amber-500 text-white rounded-xl hover:bg-amber-400 transition-colors text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed">
             发送
           </button>
         </div>
