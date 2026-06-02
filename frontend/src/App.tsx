@@ -9,6 +9,7 @@ import Register from './pages/Register';
 import PersonaPage from './pages/PersonaPage';
 import GraphPage from './pages/GraphPage';
 import TimeCapsulePage from './pages/TimeCapsulePage';
+import InsightPage from './pages/InsightPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   if (!authService.isAuthenticated()) {
@@ -68,6 +69,16 @@ export default function App() {
             <ProtectedRoute>
               <AppLayout>
                 <GraphPage />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/insights"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <InsightPage />
               </AppLayout>
             </ProtectedRoute>
           }
