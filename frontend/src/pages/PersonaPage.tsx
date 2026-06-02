@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
 import BriefingCard from '../components/dashboard/BriefingCard';
 import StatsGrid from '../components/dashboard/StatsGrid';
@@ -9,6 +9,7 @@ import ChatWindow from '../components/chat/ChatWindow';
 
 export default function PersonaPage() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const selectPersona = useStore((s) => s.selectPersona);
   const clearPersona = useStore((s) => s.clearPersona);
   const loading = useStore((s) => s.loading);
@@ -60,6 +61,12 @@ export default function PersonaPage() {
             {currentPersona.description}
           </p>
         )}
+        <button
+          onClick={() => navigate(`/persona/${id}/capsule`)}
+          className="ml-4 px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-gray-100 transition-colors whitespace-nowrap"
+        >
+          ⏳ 时间胶囊
+        </button>
       </div>
 
       {/* Briefing */}
