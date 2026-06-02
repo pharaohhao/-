@@ -5,6 +5,15 @@ from sqlalchemy.orm import Session
 from app.models import Persona, PersonaMemory, Event, Observation, PersonaInsight
 
 
+def _ensure_aware(dt):
+    """确保 datetime 是 timezone-aware"""
+    if dt is None:
+        return None
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt
+
+
 class InsightEngineService:
     """基于历史数据生成人物洞察"""
 
@@ -103,7 +112,7 @@ class InsightEngineService:
             last_memory = memories[-1] if memories else None
             days_since = None
             if last_memory and last_memory.created_at:
-                days_since = (datetime.now(timezone.utc) - last_memory.created_at).days
+                days_since = (datetime.now(timezone.utc) - _ensure_aware(last_memory.created_at)).days
 
             items.append(
                 {
@@ -208,7 +217,7 @@ class InsightEngineService:
         if memories:
             last = memories[-1]
             if last.created_at:
-                days = (datetime.now(timezone.utc) - last.created_at).days
+                days = (datetime.now(timezone.utc) - _ensure_aware(last.created_at)).days
                 if days <= 7:
                     factors["recency"] = {
                         "score": 30,
@@ -293,7 +302,7 @@ class InsightEngineService:
         if memories:
             last = memories[-1]
             if last.created_at:
-                days = (datetime.now(timezone.utc) - last.created_at).days
+                days = (datetime.now(timezone.utc) - _ensure_aware(last.created_at)).days
                 if days > 30:
                     gaps.append(
                         {

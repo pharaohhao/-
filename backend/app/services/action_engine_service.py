@@ -4,6 +4,14 @@ from sqlalchemy.orm import Session
 from app.models import Persona, PersonaMemory, Event, Action
 
 
+def _ensure_aware(dt):
+    if dt is None:
+        return None
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt
+
+
 class ActionEngineService:
     def __init__(self, db: Session):
         self.db = db
@@ -25,7 +33,7 @@ class ActionEngineService:
         if memories:
             last = memories[0]
             if last.created_at:
-                days = (datetime.now(timezone.utc) - last.created_at).days
+                days = (datetime.now(timezone.utc) - _ensure_aware(last.created_at)).days
                 reason = f"已{days}天未互动"
                 if days > 30 and reason not in existing_reasons:
                     priority = 9 if days > 60 else 7

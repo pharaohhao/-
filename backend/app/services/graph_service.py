@@ -4,6 +4,14 @@ from sqlalchemy.orm import Session
 from app.models import Persona, PersonaRelationship, PersonaMemory, Event, ChatSession
 
 
+def _ensure_aware(dt):
+    if dt is None:
+        return None
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt
+
+
 class GraphService:
     """计算关系图谱的节点和边，包括动态强度评分"""
 
@@ -77,7 +85,7 @@ class GraphService:
 
         for last in [source_last, target_last]:
             if last:
-                days_ago = (now - last).days
+                days_ago = (now - _ensure_aware(last)).days
                 if days_ago < 7:
                     score += 15
                 elif days_ago < 30:
