@@ -1,25 +1,66 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import { authService } from './services/auth';
+import { useStore } from './store';
+import Sidebar from './components/layout/Sidebar';
+import Home from './pages/Home';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import PersonaPage from './pages/PersonaPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   if (!authService.isAuthenticated()) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/login" replace />;
   }
   return <>{children}</>;
 }
 
-function App() {
+function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <BrowserRouter>
-      <div className="min-h-screen bg-gray-950 text-gray-100">
-        <Routes>
-          <Route path="/login" element={<div className="flex items-center justify-center min-h-screen"><h1 className="text-2xl">Login</h1></div>} />
-          <Route path="/register" element={<div className="flex items-center justify-center min-h-screen"><h1 className="text-2xl">Register</h1></div>} />
-          <Route path="/" element={<ProtectedRoute><div className="flex items-center justify-center min-h-screen"><h1 className="text-2xl">Home</h1></div></ProtectedRoute>} />
-        </Routes>
-      </div>
-    </BrowserRouter>
+    <div className="min-h-screen bg-gray-950">
+      <Sidebar />
+      <main className="ml-64 min-h-screen overflow-y-auto">
+        {children}
+      </main>
+    </div>
   );
 }
 
-export default App;
+export default function App() {
+  const loadPersonas = useStore((s) => s.loadPersonas);
+
+  useEffect(() => {
+    if (authService.isAuthenticated()) {
+      loadPersonas();
+    }
+  }, [loadPersonas]);
+
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route
+          path="/persona/:id"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <PersonaPage />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <Home />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
+    </BrowserRouter>
+  );
+}
