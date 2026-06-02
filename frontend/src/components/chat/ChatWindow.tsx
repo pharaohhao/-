@@ -7,7 +7,11 @@ interface ChatMessage {
   content: string;
 }
 
-export default function ChatWindow() {
+interface ChatWindowProps {
+  onMessageSent?: () => void;
+}
+
+export default function ChatWindow({ onMessageSent }: ChatWindowProps) {
   const currentPersona = useStore((s) => s.currentPersona);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
@@ -53,6 +57,8 @@ export default function ChatWindow() {
           return updated;
         });
       }
+      // Notify parent to refresh persona data after a successful send
+      onMessageSent?.();
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : '发送失败，请重试';
       setError(errorMessage);
@@ -74,8 +80,15 @@ export default function ChatWindow() {
     return null;
   }
 
+  const examplePrompts = [
+    `${currentPersona.name}喜欢百合花`,
+    `${currentPersona.name}生日是8月15日`,
+    `${currentPersona.name}最近想买空气炸锅`,
+    `${currentPersona.name}退休后喜欢钓鱼`,
+  ];
+
   return (
-    <div className="bg-gray-900 rounded-xl flex flex-col h-[500px]">
+    <div className="bg-gray-900 rounded-xl flex flex-col h-full">
       {/* Header */}
       <div className="px-5 py-3 border-b border-gray-800 flex items-center gap-2">
         <div className="w-2 h-2 rounded-full bg-green-500" />
@@ -87,8 +100,27 @@ export default function ChatWindow() {
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {messages.length === 0 && (
-          <div className="text-sm text-gray-500 text-center py-8">
-            开始和 {currentPersona.name} 对话吧
+          <div className="text-center py-12">
+            <p className="text-gray-400 text-sm mb-6">
+              ✨ 开始认识 {currentPersona.name}
+            </p>
+            <div className="flex flex-wrap gap-2 justify-center max-w-lg mx-auto">
+              {examplePrompts.map((prompt) => (
+                <button
+                  key={prompt}
+                  onClick={() => {
+                    setInput(prompt);
+                    inputRef.current?.focus();
+                  }}
+                  className="px-3 py-2 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-gray-200 rounded-lg text-xs transition-colors"
+                >
+                  {prompt}
+                </button>
+              ))}
+            </div>
+            <p className="text-gray-600 text-xs mt-4">
+              点击上方示例快速填入，或直接输入任意信息
+            </p>
           </div>
         )}
 

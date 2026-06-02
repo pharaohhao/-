@@ -20,11 +20,19 @@ export const eventService = {
     const res = await api.get(`/personas/${personaId}/events`);
     return res.data;
   },
+  async create(personaId: string, data: Partial<PersonaEvent>): Promise<PersonaEvent> {
+    const res = await api.post(`/personas/${personaId}/events`, data);
+    return res.data;
+  },
 };
 
 export const observationService = {
   async list(personaId: string): Promise<Observation[]> {
     const res = await api.get(`/personas/${personaId}/observations`);
+    return res.data;
+  },
+  async create(personaId: string, data: Partial<Observation>): Promise<Observation> {
+    const res = await api.post(`/personas/${personaId}/observations`, data);
     return res.data;
   },
 };

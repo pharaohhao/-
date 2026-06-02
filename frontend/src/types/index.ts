@@ -24,6 +24,8 @@ export interface PersonaMemory {
   content: string;
   keywords: string;
   importance: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface Relationship {
@@ -43,6 +45,7 @@ export interface PersonaEvent {
   event_date: string;
   is_recurring: boolean;
   importance: number;
+  created_at?: string;
 }
 
 export interface Observation {
@@ -51,6 +54,7 @@ export interface Observation {
   content: string;
   source_type: string;
   confidence: number;
+  created_at?: string;
 }
 
 export interface PersonaInsight {
