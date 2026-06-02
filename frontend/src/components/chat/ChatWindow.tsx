@@ -2,176 +2,105 @@ import { useState, useRef, useEffect } from 'react';
 import { useStore } from '../../store';
 import { chatService } from '../../services/chat';
 
-interface ChatMessage {
-  role: 'user' | 'assistant';
-  content: string;
-}
+interface ChatMessage { role: 'user' | 'assistant'; content: string; }
 
-interface ChatWindowProps {
-  onMessageSent?: () => void;
-}
-
-export default function ChatWindow({ onMessageSent }: ChatWindowProps) {
-  const currentPersona = useStore((s) => s.currentPersona);
+export default function ChatWindow({ onMessageSent }: { onMessageSent?: () => void }) {
+  const currentPersona = useStore(s => s.currentPersona);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
-  const [isStreaming, setIsStreaming] = useState(false);
+  const [streaming, setStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Scroll to bottom on new messages
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
+  useEffect(() => { setMessages([]); setError(null); }, [currentPersona?.id]);
 
-  // Reset chat when persona changes
-  useEffect(() => {
-    setMessages([]);
-    setError(null);
-  }, [currentPersona?.id]);
-
-  const handleSend = async () => {
+  const send = async () => {
     const text = input.trim();
-    if (!text || !currentPersona || isStreaming) return;
-
-    setInput('');
-    setError(null);
-
-    // Add user message
-    const userMsg: ChatMessage = { role: 'user', content: text };
-    setMessages((prev) => [...prev, userMsg]);
-
-    // Add empty assistant message for streaming
-    const assistantMsg: ChatMessage = { role: 'assistant', content: '' };
-    setMessages((prev) => [...prev, assistantMsg]);
-    setIsStreaming(true);
-
+    if (!text || !currentPersona || streaming) return;
+    setInput(''); setError(null);
+    setMessages(p => [...p, { role: 'user', content: text }, { role: 'assistant', content: '' }]);
+    setStreaming(true);
     try {
-      let accumulated = '';
+      let acc = '';
       for await (const chunk of chatService.askStream(currentPersona.id, text)) {
-        accumulated += chunk;
-        setMessages((prev) => {
-          const updated = [...prev];
-          updated[updated.length - 1] = { role: 'assistant', content: accumulated };
-          return updated;
-        });
+        acc += chunk;
+        setMessages(p => { const u = [...p]; u[u.length - 1] = { role: 'assistant', content: acc }; return u; });
       }
-      // Notify parent to refresh persona data after a successful send
       onMessageSent?.();
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : '发送失败，请重试';
-      setError(errorMessage);
-      // Remove the empty assistant message on error
-      setMessages((prev) => prev.slice(0, -1));
-    } finally {
-      setIsStreaming(false);
-    }
+    } catch (err: any) {
+      setError(err?.message || '发送失败');
+      setMessages(p => p.slice(0, -1));
+    } finally { setStreaming(false); }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-  };
+  if (!currentPersona) return null;
 
-  if (!currentPersona) {
-    return null;
-  }
-
-  const examplePrompts = [
-    `${currentPersona.name}喜欢百合花`,
-    `${currentPersona.name}生日是8月15日`,
-    `${currentPersona.name}最近想买空气炸锅`,
-    `${currentPersona.name}退休后喜欢钓鱼`,
+  const chips = [
+    `${currentPersona.name}喜欢什么花`,
+    `${currentPersona.name}生日是什么时候`,
+    `${currentPersona.name}最近在关注什么`,
+    `${currentPersona.name}退休后喜欢做什么`,
   ];
 
+  const hasMessages = messages.length > 0;
+
   return (
-    <div className="bg-gray-900 rounded-xl flex flex-col h-full">
+    <div className="rounded-2xl border border-slate-800 bg-slate-900 shadow-lg flex flex-col" style={{ height: '700px' }}>
       {/* Header */}
-      <div className="px-5 py-3 border-b border-gray-800 flex items-center gap-2">
-        <div className="w-2 h-2 rounded-full bg-green-500" />
-        <span className="text-sm text-gray-300">
-          正在和 <span className="font-medium text-gray-200">{currentPersona.name}</span> 对话...
-        </span>
+      <div className="px-5 py-3 border-b border-slate-800 flex items-center gap-2 shrink-0">
+        <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50" />
+        <span className="text-sm text-slate-300">正在和 <span className="font-medium text-slate-200">{currentPersona.name}</span> 对话</span>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
-        {messages.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-gray-400 text-sm mb-6">
-              ✨ 开始认识 {currentPersona.name}
-            </p>
-            <div className="flex flex-wrap gap-2 justify-center max-w-lg mx-auto">
-              {examplePrompts.map((prompt) => (
-                <button
-                  key={prompt}
-                  onClick={() => {
-                    setInput(prompt);
-                    inputRef.current?.focus();
-                  }}
-                  className="px-3 py-2 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-gray-200 rounded-lg text-xs transition-colors"
-                >
-                  {prompt}
+      <div className="flex-1 overflow-y-auto p-6 space-y-4">
+        {!hasMessages && (
+          <div className="flex flex-col items-center justify-center h-full text-center">
+            <div className="text-5xl mb-4">{currentPersona.avatar || '👤'}</div>
+            <h3 className="text-lg font-medium text-slate-300 mb-2">开始认识 {currentPersona.name}</h3>
+            <p className="text-slate-500 text-sm mb-6">点击下方话题或直接输入，系统会自动提取记忆</p>
+            <div className="flex flex-wrap gap-2 justify-center max-w-md">
+              {chips.map(c => (
+                <button key={c} onClick={() => { setInput(c); inputRef.current?.focus(); }}
+                  className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 rounded-xl text-xs transition-colors border border-slate-700 hover:border-slate-600">
+                  {c}
                 </button>
               ))}
             </div>
-            <p className="text-gray-600 text-xs mt-4">
-              点击上方示例快速填入，或直接输入任意信息
-            </p>
           </div>
         )}
 
-        {messages.map((msg, idx) => (
-          <div
-            key={idx}
-            className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-          >
-            <div
-              className={`max-w-[75%] rounded-xl px-4 py-2.5 text-sm leading-relaxed ${
-                msg.role === 'user'
-                  ? 'bg-blue-500/20 text-gray-200'
-                  : 'bg-gray-800 text-gray-300'
-              }`}
-            >
-              {msg.content || (isStreaming && idx === messages.length - 1 ? (
-                <span className="inline-flex gap-1">
-                  <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                </span>
-              ) : null)}
+        {messages.map((m, i) => (
+          <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+            <div className={`max-w-[75%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+              m.role === 'user'
+                ? 'bg-blue-600/20 text-slate-200 border border-blue-500/20'
+                : 'bg-slate-800 text-slate-300 border border-slate-700'
+            }`}>
+              {m.content || (streaming && i === messages.length - 1
+                ? <span className="flex gap-1"><span className="w-1.5 h-1.5 bg-slate-500 rounded-full animate-bounce" /><span className="w-1.5 h-1.5 bg-slate-500 rounded-full animate-bounce [animation-delay:150ms]" /><span className="w-1.5 h-1.5 bg-slate-500 rounded-full animate-bounce [animation-delay:300ms]" /></span>
+                : null)}
             </div>
           </div>
         ))}
 
-        {error && (
-          <div className="text-xs text-red-400 text-center py-2">{error}</div>
-        )}
-
-        <div ref={messagesEndRef} />
+        {error && <div className="text-xs text-rose-400 text-center py-2">{error}</div>}
+        <div ref={bottomRef} />
       </div>
 
-      {/* Input */}
-      <div className="px-4 py-3 border-t border-gray-800">
+      {/* Input — sticky */}
+      <div className="px-4 py-3 border-t border-slate-800 shrink-0">
         <div className="flex items-center gap-2">
-          <input
-            ref={inputRef}
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="输入消息..."
-            disabled={isStreaming}
-            className="flex-1 bg-gray-800 text-gray-200 rounded-lg px-4 py-2 text-sm outline-none placeholder-gray-500 focus:ring-1 focus:ring-gray-700 disabled:opacity-50"
-          />
-          <button
-            onClick={handleSend}
-            disabled={!input.trim() || isStreaming}
-            className="px-4 py-2 bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/30 transition-colors text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed"
-          >
+          <input ref={inputRef} type="text" value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
+            placeholder={`和 ${currentPersona.name} 说点什么...`}
+            disabled={streaming}
+            className="flex-1 bg-slate-800 text-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none placeholder-slate-500 border border-slate-700 focus:border-slate-600 disabled:opacity-50 transition-colors" />
+          <button onClick={send} disabled={!input.trim() || streaming}
+            className="px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-500 transition-colors text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed">
             发送
           </button>
         </div>
