@@ -3,6 +3,7 @@ from typing import AsyncIterator
 
 from app.ai.providers.factory import get_llm_provider
 from app.ai.schemas.extraction import MemoryExtractionItem
+from app.ai.prompts.intent_detection import INTENT_DETECTION_SYSTEM_PROMPT
 from app.ai.prompts.memory_extraction import MEMORY_EXTRACTION_SYSTEM_PROMPT
 from app.ai.prompts.persona_summary import PERSONA_SUMMARY_SYSTEM_PROMPT
 
@@ -26,23 +27,40 @@ class LLMService:
         async for chunk in self.provider.chat_stream(messages, **kwargs):
             yield chunk
 
-    async def extract_memories(self, text: str) -> list[MemoryExtractionItem]:
-        """从自然语言文本中提取结构化记忆"""
+    async def extract_memories(self, text: str) -> dict:
+        """从自然语言文本中提取结构化记忆，返回 {"items": [...], "events": [...]}"""
         extraction_schema = {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "properties": {
-                    "persona_name": {"type": "string", "description": "人物名称"},
-                    "category": {
-                        "type": "string",
-                        "enum": ["food", "hobby", "style", "personality", "relationship", "dream", "dislike", "other"],
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "persona_name": {"type": "string"},
+                            "category": {"type": "string", "enum": ["food", "hobby", "style", "personality", "relationship", "dream", "dislike", "other"]},
+                            "content": {"type": "string"},
+                            "keywords": {"type": "string"},
+                            "importance": {"type": "integer", "minimum": 1, "maximum": 10},
+                            "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+                            "source_type": {"type": "string", "enum": ["direct_statement", "inference", "observation"]},
+                        },
+                        "required": ["persona_name", "category", "content"],
                     },
-                    "content": {"type": "string", "description": "记忆内容"},
-                    "keywords": {"type": "string", "description": "逗号分隔的关键词"},
-                    "importance": {"type": "integer", "minimum": 1, "maximum": 10},
                 },
-                "required": ["persona_name", "category", "content"],
+                "events": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "persona_name": {"type": "string"},
+                            "title": {"type": "string"},
+                            "event_type": {"type": "string", "enum": ["birthday", "anniversary", "exam", "meeting", "other"]},
+                            "event_date": {"type": "string", "description": "ISO date format"},
+                            "description": {"type": "string"},
+                        },
+                    },
+                },
             },
         }
 
@@ -58,8 +76,28 @@ class LLMService:
             if cleaned.startswith("json"):
                 cleaned = cleaned[4:].strip()
 
-        items_data = json.loads(cleaned)
-        return [MemoryExtractionItem(**item) for item in items_data]
+        result = json.loads(cleaned)
+        # Parse items into MemoryExtractionItem objects
+        items = [MemoryExtractionItem(**item) for item in result.get("items", [])]
+        return {
+            "items": items,
+            "events": result.get("events", []),
+        }
+
+    async def detect_intent(self, text: str) -> dict:
+        """检测用户输入意图"""
+        result = await self.provider.chat(
+            [
+                {"role": "system", "content": INTENT_DETECTION_SYSTEM_PROMPT},
+                {"role": "user", "content": text},
+            ],
+            max_tokens=256,
+            temperature=0.1,
+        )
+        cleaned = result.strip()
+        if cleaned.startswith("```"):
+            cleaned = cleaned.split("\n", 1)[1].rsplit("\n```", 1)[0]
+        return json.loads(cleaned)
 
     async def generate_persona_summary(
         self, persona_name: str, memories: list[dict], events: list[dict] | None = None
