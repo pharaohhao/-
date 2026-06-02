@@ -24,13 +24,26 @@ class ClaudeProvider(LLMProvider):
                 chat_messages.append({"role": m["role"], "content": m["content"]})
         return system, chat_messages
 
+    def _extract_response_text(self, response) -> str:
+        """从响应中提取文本内容，跳过 ThinkingBlock 等非文本块"""
+        for block in response.content:
+            if hasattr(block, "text"):
+                return block.text
+        return ""
+
     async def chat(self, messages: list[dict], max_tokens: int = 1024, **kwargs) -> str:
         system, chat_messages = self._split_system_messages(messages)
-        kwargs_call = dict(model=self.model, max_tokens=max_tokens, messages=chat_messages, **kwargs)
+        kwargs_call = dict(
+            model=self.model,
+            max_tokens=max_tokens,
+            messages=chat_messages,
+            thinking={"type": "disabled"},  # 结构化提取不需要 thinking
+            **kwargs,
+        )
         if system:
             kwargs_call["system"] = system
         response = await self.client.messages.create(**kwargs_call)
-        return response.content[0].text
+        return self._extract_response_text(response)
 
     async def chat_stream(self, messages: list[dict], max_tokens: int = 1024, **kwargs) -> AsyncIterator[str]:
         system, chat_messages = self._split_system_messages(messages)
