@@ -1,0 +1,1 @@
+from app.knowledge.services.knowledge_service import KnowledgeService

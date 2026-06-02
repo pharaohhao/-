@@ -147,6 +147,15 @@ class MemoryIntelligenceService:
         self.db.commit()
         self.db.refresh(memory)
         result.items_stored += 1
+
+        # Auto-index the new memory in KnowledgeService
+        from app.knowledge.services.knowledge_service import KnowledgeService
+        try:
+            ks = KnowledgeService(self.db)
+            ks.add_memory(memory)
+        except Exception:
+            pass  # Don't block the pipeline if indexing fails
+
         return "stored"
 
     def _find_persona_by_name(self, user_id: str, persona_name: str) -> Persona | None:
