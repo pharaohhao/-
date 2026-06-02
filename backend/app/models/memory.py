@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Text, Integer, ForeignKey, Float
+from sqlalchemy import Column, String, Text, Integer, Float, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from app.models.base import Base, TimestampMixin, UUIDChar, generate_uuid
 
@@ -13,6 +13,8 @@ class PersonaMemory(Base, TimestampMixin):
     keywords = Column(String(500), default="")
     embedding = Column(String, nullable=True)  # BLOB-like, stored as base64 string for SQLite
     importance = Column(Integer, default=5)
+    confidence_score = Column(Float, default=1.0)  # 0.0-1.0
+    last_confirmed_at = Column(DateTime, nullable=True)
 
     persona = relationship("Persona", back_populates="memories")
     sources = relationship("MemorySource", back_populates="memory", cascade="all, delete-orphan")

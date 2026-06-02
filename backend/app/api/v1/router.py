@@ -11,6 +11,8 @@ from app.api.v1.insights_dashboard import router as insights_dashboard_router
 from app.api.v1.timeline import router as timeline_router
 from app.api.v1.graph import router as graph_router
 from app.api.v1.snapshot import router as snapshot_router
+from app.api.v1.actions import router as actions_router
+from app.api.v1.life_story import router as life_story_router
 
 api_router = APIRouter(prefix="/api/v1")
 api_router.include_router(auth_router)
@@ -25,3 +27,5 @@ api_router.include_router(insights_dashboard_router)
 api_router.include_router(timeline_router)
 api_router.include_router(graph_router)
 api_router.include_router(snapshot_router)
+api_router.include_router(actions_router)
+api_router.include_router(life_story_router)
