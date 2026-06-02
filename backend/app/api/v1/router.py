@@ -5,6 +5,7 @@ from app.api.v1.memories import router as memories_router
 from app.api.v1.relationships import router as relationships_router
 from app.api.v1.events import router as events_router
 from app.api.v1.observations import router as observations_router
+from app.api.v1.chat import router as chat_router
 
 api_router = APIRouter(prefix="/api/v1")
 api_router.include_router(auth_router)
@@ -13,3 +14,4 @@ api_router.include_router(memories_router)
 api_router.include_router(relationships_router)
 api_router.include_router(events_router)
 api_router.include_router(observations_router)
+api_router.include_router(chat_router)
