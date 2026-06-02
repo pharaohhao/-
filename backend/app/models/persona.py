@@ -27,6 +27,15 @@ class Persona(Base, TimestampMixin):
     insights = relationship("PersonaInsight", back_populates="persona", uselist=False, cascade="all, delete-orphan")
     actions = relationship("Action", back_populates="persona", cascade="all, delete-orphan")
     briefings = relationship("Briefing", back_populates="persona", cascade="all, delete-orphan")
+    source_relationships = relationship(
+        "PersonaRelationship", foreign_keys="PersonaRelationship.source_persona_id",
+        back_populates="source_persona", cascade="all, delete-orphan",
+    )
+    target_relationships = relationship(
+        "PersonaRelationship", foreign_keys="PersonaRelationship.target_persona_id",
+        back_populates="target_persona", cascade="all, delete-orphan",
+    )
+    chat_sessions = relationship("ChatSession", back_populates="persona")
 
     def __repr__(self):
         return f"<Persona(id={self.id}, name={self.name!r}, relation={self.relation!r})>"

@@ -12,6 +12,7 @@ class ChatSession(Base, TimestampMixin):
     title = Column(String(200), default="新对话")
 
     user = relationship("User", back_populates="chat_sessions")
+    persona = relationship("Persona", back_populates="chat_sessions")
     messages = relationship("ChatMessage", back_populates="session", cascade="all, delete-orphan")
 
     def __repr__(self):

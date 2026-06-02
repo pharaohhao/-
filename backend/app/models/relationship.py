@@ -12,8 +12,8 @@ class PersonaRelationship(Base, TimestampMixin):
     relationship_type = Column(String(20), nullable=False)
     strength_score = Column(Integer, default=50)
 
-    source_persona = relationship("Persona", foreign_keys=[source_persona_id])
-    target_persona = relationship("Persona", foreign_keys=[target_persona_id])
+    source_persona = relationship("Persona", foreign_keys=[source_persona_id], back_populates="source_relationships")
+    target_persona = relationship("Persona", foreign_keys=[target_persona_id], back_populates="target_relationships")
 
     def __repr__(self):
         return f"<PersonaRelationship(source={self.source_persona_id}, target={self.target_persona_id}, type={self.relationship_type!r})>"
