@@ -68,6 +68,17 @@ export default function Sidebar() {
         })}
       </div>
 
+      {/* Graph nav button */}
+      <div className="p-3 border-t border-gray-800">
+        <button
+          onClick={() => navigate('/graph')}
+          className="flex items-center gap-2 w-full p-3 rounded-lg text-gray-400 hover:text-gray-200 hover:bg-gray-800 transition-colors"
+        >
+          <span className="text-lg">🔗</span>
+          <span className="text-sm">关系图谱</span>
+        </button>
+      </div>
+
       {/* Add button */}
       <div className="p-3 border-t border-gray-800">
         <button

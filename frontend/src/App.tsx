@@ -7,6 +7,7 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import PersonaPage from './pages/PersonaPage';
+import GraphPage from './pages/GraphPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   if (!authService.isAuthenticated()) {
@@ -46,6 +47,16 @@ export default function App() {
             <ProtectedRoute>
               <AppLayout>
                 <PersonaPage />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/graph"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <GraphPage />
               </AppLayout>
             </ProtectedRoute>
           }
