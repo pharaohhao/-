@@ -299,31 +299,108 @@ FastAPI Backend
 - 主动行动建议
 - Multi-Agent 协作
 
+## AI 层设计原则
+
+### LLM Provider 必须可替换
+
+业务代码永远依赖抽象 `LLMProvider`，不依赖具体实现。所有 LLM 调用必须通过统一入口。
+
+```python
+class LLMProvider(ABC):
+    async def chat(self, messages: list, **kwargs) -> str
+    async def extract(self, text: str, schema: dict) -> list[dict]
+
+class ClaudeProvider(LLMProvider): ...
+class OpenAIProvider(LLMProvider): ...
+class GeminiProvider(LLMProvider): ...
+```
+
+### Knowledge Service 拆分
+
+Memory Service 只负责 CRUD。Embedding / FAISS / RAG / Retrieval 由 Knowledge Service 独立负责。
+
+```
+Memory Service     → CRUD（创建/更新/删除/搜索记忆）
+Knowledge Service  → Embedding 生成、FAISS 索引、向量检索、RAG 查询
+```
+
+### AI 基础设施目录结构
+
+```
+backend/app/ai/
+├── providers/
+│   ├── __init__.py
+│   ├── base.py          # LLMProvider 抽象基类
+│   ├── claude.py        # ClaudeProvider 实现
+│   └── factory.py       # LLMProvider 工厂
+├── prompts/
+│   ├── __init__.py
+│   ├── memory_extraction.py
+│   └── persona_summary.py
+├── schemas/
+│   ├── __init__.py
+│   ├── extraction.py    # 记忆提取的结构化输出 schema
+│   └── chat.py          # 聊天请求/响应 schema
+└── services/
+    ├── __init__.py
+    ├── llm_service.py        # LLM 调用统一入口
+    └── knowledge_service.py  # Embedding + FAISS + RAG
+```
+
+### 混合检索策略
+
+关键词检索（SQL LIKE）+ 向量检索（FAISS）→ 加权融合：
+
+```
+Final Score = Keyword Score × α + Vector Score × (1 - α)
+```
+
+结构化字段查询（如生日、姓名）优先用关键词匹配；语义模糊查询（如"喜欢什么风格"）优先用向量检索。
+
 ## 开发 Sprint
 
-### Sprint 1：基础设施
-- 项目脚手架（FastAPI + React + Vite）
-- 数据库模型（SQLAlchemy + Alembic）
-- JWT 认证
-- Persona CRUD API
-- Memory CRUD API
+### Sprint 1：基础设施 ✅ 已完成
+- [x] 项目脚手架（FastAPI + React + Vite）
+- [x] 数据库模型（SQLAlchemy + Alembic，13 张表）
+- [x] JWT 认证
+- [x] Persona/Memory/Event/Observation/Relationship CRUD API
+- [x] React 前端脚手架
 
 ### Sprint 2：AI 核心
-- Claude API 接入（LLM Adapter）
-- 记忆提取 Pipeline
-- Embedding 生成
-- FAISS 向量索引
-- RAG 问答流程
+
+#### Sprint 2.1 — LLM Gateway（AI 基础设施）
+- LLMProvider 抽象基类 + ClaudeProvider 实现
+- LLMProvider 工厂（通过配置切换 provider）
+- LLM Service 统一调用入口
+- AI 相关 Pydantic schemas
+- Prompt 模板管理
+
+#### Sprint 2.2 — Memory Extraction
+- 自然语言 → 结构化记忆抽取 Pipeline
+- 多实体识别（一段文本提取多条记忆）
+- 记忆分类自动推断（category: food/hobby/style...）
+- 抽取准确性验证
+
+#### Sprint 2.3 — Embedding + FAISS + Knowledge Service
+- Knowledge Service 实现
+- 新增记忆时自动生成 Embedding
+- FAISS 向量索引构建与持久化
+- 混合检索（关键词 + 向量加权融合）
+
+#### Sprint 2.4 — Persona Context Chat + RAG
+- 上下文聊天（当前 Persona 自动注入检索上下文）
+- RAG 问答：用户问题 → Embedding → FAISS Top-K → LLM 生成
+- 验收标准：切换人物后，"她喜欢什么？" 自动检索正确人物的记忆
 
 ### Sprint 3：用户可见价值
 - Persona Switcher 前端组件
-- Dashboard 页面
+- Dashboard 页面（统计卡片 + 近期动态）
 - AI 人物卡展示
 - 时间线组件
 
 ### Sprint 4：产品亮点
 - AI Briefing 生成
-- 智能提醒系统
+- 智能提醒系统（多级 + 记忆增强）
 - 礼物/行动推荐
 - 通知中心
 
@@ -332,6 +409,26 @@ FastAPI Backend
 - Health Score 计算与展示
 - Planner Agent 规划链
 
+### Persona Intelligence 闭环（Sprint 2 验收标准）
+
+```
+用户输入 "妈妈喜欢百合花"
+      ↓
+Memory Extraction → 结构化记忆 [{persona:"妈妈", category:"preference", content:"喜欢百合花"}]
+      ↓
+存储 Memory + Embedding + FAISS
+      ↓
+用户提问 "妈妈最近喜欢什么？"（当前 Persona = 妈妈）
+      ↓
+Knowledge Service 检索（关键词 + 向量混合）
+      ↓
+RAG → Claude 生成回答
+      ↓
+"根据记录，妈妈喜欢百合花。"
+```
+
+当这个闭环首次跑通时，项目从 CRUD 系统质变为 AI Relationship Intelligence Platform。
+
 ---
 
-*文档版本：1.0 | 作者：Claude Code + 用户协作设计 | 状态：架构已冻结*
+*文档版本：2.0 | Sprint 1 验收通过 (2026-06-02) | 进入 Sprint 2.1*
