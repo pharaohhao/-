@@ -8,3 +8,6 @@ backend/__pycache__/
 venv/
 backend/venv/
 *.egg-info/
+backend/knowledge.faiss
+backend/knowledge.meta
+__pycache__/

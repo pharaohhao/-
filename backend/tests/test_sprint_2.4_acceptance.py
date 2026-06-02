@@ -1,7 +1,7 @@
 """Sprint 2.4 Acceptance Test: Persona Context Chat"""
 import sys, io, asyncio, os
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
-os.environ['ANTHROPIC_API_KEY'] = 'sk-90232d02793a40f2a0044784ff18d0aa'
+os.environ.setdefault('ANTHROPIC_API_KEY', os.environ.get('ANTHROPIC_API_KEY', ''))
 
 from app.database import SessionLocal
 from app.models import User, Persona
