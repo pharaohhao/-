@@ -62,6 +62,12 @@ export default function PersonaPage() {
           </p>
         )}
         <button
+          onClick={() => navigate(`/persona/${id}/story`)}
+          className="ml-4 px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-gray-100 transition-colors whitespace-nowrap"
+        >
+          📖 生命故事
+        </button>
+        <button
           onClick={() => navigate(`/persona/${id}/capsule`)}
           className="ml-4 px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-gray-100 transition-colors whitespace-nowrap"
         >

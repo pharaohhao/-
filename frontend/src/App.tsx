@@ -10,6 +10,8 @@ import PersonaPage from './pages/PersonaPage';
 import GraphPage from './pages/GraphPage';
 import TimeCapsulePage from './pages/TimeCapsulePage';
 import InsightPage from './pages/InsightPage';
+import ActionCenterPage from './pages/ActionCenterPage';
+import LifeStoryPage from './pages/LifeStoryPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   if (!authService.isAuthenticated()) {
@@ -79,6 +81,26 @@ export default function App() {
             <ProtectedRoute>
               <AppLayout>
                 <InsightPage />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/actions"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <ActionCenterPage />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/persona/:id/story"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <LifeStoryPage />
               </AppLayout>
             </ProtectedRoute>
           }

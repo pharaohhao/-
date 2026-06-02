@@ -84,6 +84,13 @@ export default function Sidebar() {
           <span className="text-lg">{'💡'}</span>
           <span className="text-sm">洞察面板</span>
         </button>
+        <button
+          onClick={() => navigate('/actions')}
+          className="flex items-center gap-2 w-full p-3 rounded-lg text-gray-400 hover:text-gray-200 hover:bg-gray-800 transition-colors"
+        >
+          <span className="text-lg">{'🎯'}</span>
+          <span className="text-sm">行动中心</span>
+        </button>
         {currentPersona && (
           <button
             onClick={() => navigate(`/persona/${currentPersona.id}/capsule`)}
