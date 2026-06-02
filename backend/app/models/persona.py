@@ -1,15 +1,14 @@
 # backend/app/models/persona.py
 from sqlalchemy import Column, String, Date, Text, ForeignKey
 from sqlalchemy.orm import relationship
-from sqlalchemy.dialects.sqlite import CHAR
-from app.models.base import Base, TimestampMixin, generate_uuid
+from app.models.base import Base, TimestampMixin, UUIDChar, generate_uuid
 
 
 class Persona(Base, TimestampMixin):
     __tablename__ = "personas"
 
-    id = Column(CHAR(36), primary_key=True, default=generate_uuid)
-    user_id = Column(CHAR(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    id = Column(UUIDChar, primary_key=True, default=generate_uuid)
+    user_id = Column(UUIDChar, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     name = Column(String(50), nullable=False)
     avatar = Column(String(10), default="👤")
     relation = Column(String(20), nullable=False)  # girlfriend/father/mother/mentor/friend
@@ -28,3 +27,6 @@ class Persona(Base, TimestampMixin):
     insights = relationship("PersonaInsight", back_populates="persona", uselist=False, cascade="all, delete-orphan")
     actions = relationship("Action", back_populates="persona", cascade="all, delete-orphan")
     briefings = relationship("Briefing", back_populates="persona", cascade="all, delete-orphan")
+
+    def __repr__(self):
+        return f"<Persona(id={self.id}, name={self.name!r}, relation={self.relation!r})>"
